@@ -778,7 +778,7 @@
     </div>
     <div class="logo-area" id="logo-area">
       <div class="logo-box">SUA EMPRESA</div>
-      <div class="cta-text">Hoje é dia de fazer acontecer.<br><strong>Bora Contatar? Bora vender!</strong></div>
+      <div class="cta-text">Hoje é dia de fazer acontecer.<br><strong>Bora ligar? Bora vender!</strong></div>
     </div>
   </div>
 
@@ -1072,9 +1072,361 @@ async function startAnimation() {
   el('replay-btn').classList.add('show');
 }
 
+// ============================================================
+// BIG BAND SWING ENGINE — Web Audio API
+// ============================================================
+let audioCtx = null;
+let jazzPlaying = false;
+let jazzScheduler = null;
+let masterGain = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.82; // destaque
+  masterGain.connect(audioCtx.destination);
+}
+
+// ── Reverb (convolution approximation via delay network) ────
+function makeReverb(ctx, seconds = 1.2, decay = 2.0) {
+  const rate = ctx.sampleRate;
+  const len = rate * seconds;
+  const buf = ctx.createBuffer(2, len, rate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    for (let i = 0; i < len; i++)
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+  }
+  const conv = ctx.createConvolver();
+  conv.buffer = buf;
+  return conv;
+}
+
+// ── Compressor for warmth ────────────────────────────────────
+function makeCompressor(ctx) {
+  const c = ctx.createDynamicsCompressor();
+  c.threshold.value = -18;
+  c.knee.value = 10;
+  c.ratio.value = 4;
+  c.attack.value = 0.003;
+  c.release.value = 0.15;
+  return c;
+}
+
+// ── Oscillator note helper ───────────────────────────────────
+function mtoF(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+function playNote(dest, ctx, midi, start, dur, vol=0.5, type='sawtooth', detune=0) {
+  if (start < ctx.currentTime) return;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = mtoF(midi);
+  osc.detune.value = detune;
+  g.gain.setValueAtTime(0, start);
+  g.gain.linearRampToValueAtTime(vol, start + 0.015);
+  g.gain.setValueAtTime(vol, start + dur * 0.7);
+  g.gain.linearRampToValueAtTime(0, start + dur);
+  osc.connect(g); g.connect(dest);
+  osc.start(start); osc.stop(start + dur + 0.05);
+}
+
+// ── Drum helpers ─────────────────────────────────────────────
+function kick(dest, ctx, t) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.frequency.setValueAtTime(150, t);
+  osc.frequency.exponentialRampToValueAtTime(40, t + 0.12);
+  g.gain.setValueAtTime(1.0, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+  osc.connect(g); g.connect(dest);
+  osc.start(t); osc.stop(t + 0.3);
+}
+
+function snare(dest, ctx, t) {
+  // Noise burst
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain();
+  const bpf = ctx.createBiquadFilter();
+  bpf.type = 'bandpass';
+  bpf.frequency.value = 2000;
+  bpf.Q.value = 0.8;
+  g.gain.setValueAtTime(0.55, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  src.connect(bpf); bpf.connect(g); g.connect(dest);
+  src.start(t); src.stop(t + 0.15);
+  // Body tone
+  const osc = ctx.createOscillator();
+  const og = ctx.createGain();
+  osc.frequency.value = 200;
+  og.gain.setValueAtTime(0.3, t);
+  og.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+  osc.connect(og); og.connect(dest);
+  osc.start(t); osc.stop(t + 0.1);
+}
+
+function hihat(dest, ctx, t, vol=0.18, open=false) {
+  const buf = ctx.createBuffer(1, ctx.sampleRate * (open ? 0.25 : 0.04), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.value = 7000;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + (open ? 0.22 : 0.035));
+  src.connect(hpf); hpf.connect(g); g.connect(dest);
+  src.start(t); src.stop(t + (open ? 0.3 : 0.05));
+}
+
+function rimshot(dest, ctx, t) {
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = 900;
+  g.gain.setValueAtTime(0.25, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+  osc.connect(g); g.connect(dest);
+  osc.start(t); osc.stop(t + 0.05);
+}
+
+// ── Trumpet with vibrato ─────────────────────────────────────
+function trumpet(dest, ctx, midi, t, dur, vol=0.28) {
+  const osc = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const vib = ctx.createOscillator();
+  const vibG = ctx.createGain();
+  const g = ctx.createGain();
+  const shaper = ctx.createWaveShaper();
+  // Soft clip for brass timbre
+  const curve = new Float32Array(256);
+  for (let i = 0; i < 256; i++) { const x = (i * 2) / 256 - 1; curve[i] = (3 + 10) * x * 20 * (Math.PI / 180) / (Math.PI + 10 * Math.abs(x)); }
+  shaper.curve = curve; shaper.oversample = '2x';
+
+  osc.type = 'sawtooth'; osc.frequency.value = mtoF(midi);
+  osc2.type = 'sawtooth'; osc2.frequency.value = mtoF(midi) * 1.005; // slight chorus
+  vib.type = 'sine'; vib.frequency.value = 5.5;
+  vibG.gain.value = mtoF(midi) * 0.012;
+
+  vib.connect(vibG);
+  vibG.connect(osc.frequency);
+  vibG.connect(osc2.frequency);
+
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.04);
+  g.gain.setValueAtTime(vol * 0.85, t + dur * 0.6);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+
+  osc.connect(shaper); osc2.connect(shaper);
+  shaper.connect(g); g.connect(dest);
+  vib.start(t); osc.start(t); osc2.start(t);
+  vib.stop(t + dur + 0.1); osc.stop(t + dur + 0.1); osc2.stop(t + dur + 0.1);
+}
+
+// ── Walking bass ─────────────────────────────────────────────
+function bass(dest, ctx, midi, t, dur, vol=0.45) {
+  const osc = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  const g = ctx.createGain();
+  const lpf = ctx.createBiquadFilter();
+  lpf.type = 'lowpass'; lpf.frequency.value = 500;
+  osc.type = 'sawtooth'; osc.frequency.value = mtoF(midi);
+  osc2.type = 'sine'; osc2.frequency.value = mtoF(midi);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.02);
+  g.gain.setValueAtTime(vol * 0.7, t + dur * 0.5);
+  g.gain.linearRampToValueAtTime(0, t + dur * 0.9);
+  osc.connect(lpf); osc2.connect(lpf); lpf.connect(g); g.connect(dest);
+  osc.start(t); osc2.start(t); osc.stop(t + dur); osc2.stop(t + dur);
+}
+
+// ── Rhodes-style piano chord ─────────────────────────────────
+function pianoChord(dest, ctx, midis, t, dur, vol=0.22) {
+  midis.forEach((midi, i) => {
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = mtoF(midi);
+    osc2.type = 'triangle'; osc2.frequency.value = mtoF(midi) * 2.001;
+    g.gain.setValueAtTime(0, t + i * 0.012);
+    g.gain.linearRampToValueAtTime(vol, t + i * 0.012 + 0.02);
+    g.gain.setValueAtTime(vol * 0.6, t + dur * 0.4);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    osc.connect(g); osc2.connect(g); g.connect(dest);
+    osc.start(t); osc2.start(t); osc.stop(t + dur + 0.05); osc2.stop(t + dur + 0.05);
+  });
+}
+
+// ── Main jazz scheduler ───────────────────────────────────────
+function startJazz() {
+  if (jazzPlaying) return;
+  initAudio();
+  jazzPlaying = true;
+
+  const ctx = audioCtx;
+  const rev = makeReverb(ctx, 1.4, 2.5);
+  const comp = makeCompressor(ctx);
+  rev.connect(comp); comp.connect(masterGain);
+
+  // Dry bus for drums
+  const dryBus = ctx.createGain();
+  dryBus.gain.value = 1.0;
+  dryBus.connect(masterGain);
+
+  // Wet bus for melodic instruments
+  const wetBus = ctx.createGain();
+  wetBus.gain.value = 0.55;
+  wetBus.connect(rev);
+  wetBus.connect(masterGain);
+
+  // BPM = 188 (fast swing)
+  const BPM = 188;
+  const beat = 60 / BPM;          // one quarter note
+  const swing = beat * 0.62;       // swung 8th long
+  const swingShort = beat - swing + beat * 0.05; // swung 8th short
+
+  // Chord progressions — C major swing (I vi ii V)
+  // Bars cycle: Cmaj7 | Am7 | Dm7 | G7
+  const chords = [
+    [60,64,67,71],  // Cmaj7
+    [57,60,64,67],  // Am7
+    [62,65,69,72],  // Dm7
+    [55,59,62,65],  // G7
+  ];
+
+  // Walking bass lines per chord
+  const bassLines = [
+    [48,52,55,59],  // C walk
+    [45,48,52,55],  // Am walk
+    [50,53,57,60],  // Dm walk
+    [43,47,50,53],  // G walk
+  ];
+
+  // Trumpet melody snippets (cycling)
+  const melodies = [
+    [[72,0],[74,swing],[76,swingShort],[77,swing],[76,beat*2]],
+    [[69,0],[71,swing],[72,swingShort],[74,swing],[72,beat*2]],
+    [[74,0],[72,swing],[71,swingShort],[69,swing],[67,beat*2]],
+    [[67,0],[69,swing],[71,swingShort],[72,swing],[74,beat*2]],
+    [[76,0],[74,swing],[72,swingShort],[71,swing],[69,beat*2]],
+    [[71,0],[72,swing],[74,swingShort],[76,swing],[77,beat*2]],
+  ];
+
+  let startTime = ctx.currentTime + 0.1;
+  let bar = 0;
+  let melIdx = 0;
+  const LOOKAHEAD = 0.25;
+  const SCHEDULE_INTERVAL = 120;
+
+  function scheduleBar(t, chordIdx) {
+    const ch = chords[chordIdx % 4];
+    const bl = bassLines[chordIdx % 4];
+
+    // ── Drums (swing feel) ──
+    // Beats 1 & 3: kick
+    kick(dryBus, ctx, t);
+    kick(dryBus, ctx, t + beat * 2);
+    // Beats 2 & 4: snare
+    snare(dryBus, ctx, t + beat);
+    snare(dryBus, ctx, t + beat * 3);
+    // Swing hi-hat pattern: long short long short…
+    for (let i = 0; i < 4; i++) {
+      const bt = t + i * beat;
+      hihat(dryBus, ctx, bt, 0.15);
+      hihat(dryBus, ctx, bt + swing, 0.10);
+    }
+    // Ghost snare rimshots
+    rimshot(dryBus, ctx, t + beat * 0.5);
+    rimshot(dryBus, ctx, t + beat * 2.5);
+
+    // ── Walking bass ──
+    for (let i = 0; i < 4; i++) {
+      bass(wetBus, ctx, bl[i], t + i * beat, beat * 0.85);
+    }
+
+    // ── Piano comping (off-beat, swung) ──
+    pianoChord(wetBus, ctx, ch, t + swing, beat * 1.2, 0.20);
+    pianoChord(wetBus, ctx, ch.slice(1), t + beat * 2 + swingShort, beat * 0.8, 0.16);
+    pianoChord(wetBus, ctx, [ch[0], ch[2], ch[3]], t + beat * 3 + swing, beat * 0.6, 0.18);
+
+    // ── Trumpet melody (every 2 bars) ──
+    if (chordIdx % 2 === 0) {
+      const mel = melodies[melIdx % melodies.length];
+      let mt = t + swing * 0.5;
+      mel.forEach(([midi, offset]) => {
+        trumpet(wetBus, ctx, midi, mt + offset, beat * 1.6, 0.30);
+      });
+      if (chordIdx % 4 === 0) melIdx++;
+    }
+  }
+
+  function scheduler() {
+    if (!jazzPlaying) return;
+    while (startTime < ctx.currentTime + LOOKAHEAD) {
+      const chordIdx = bar % 4;
+      scheduleBar(startTime, chordIdx);
+      startTime += beat * 4; // one bar
+      bar++;
+    }
+    jazzScheduler = setTimeout(scheduler, SCHEDULE_INTERVAL);
+  }
+
+  // Fade in
+  masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.82, ctx.currentTime + 1.5);
+
+  scheduler();
+}
+
+function stopJazz() {
+  jazzPlaying = false;
+  clearTimeout(jazzScheduler);
+  if (masterGain && audioCtx) {
+    masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+  }
+}
+
+// Music toggle button
+function addMusicButton() {
+  const btn = document.createElement('button');
+  btn.id = 'music-btn';
+  btn.textContent = '🎷 MÚSICA';
+  btn.style.cssText = `
+    position:fixed;top:16px;right:16px;z-index:999;
+    background:rgba(255,100,0,0.15);border:2px solid #ff6600;
+    color:#ff6600;font-family:'Oswald',sans-serif;font-size:15px;
+    letter-spacing:2px;padding:8px 18px;border-radius:6px;cursor:pointer;
+    transition:all 0.3s;
+  `;
+  btn.onclick = () => {
+    if (!jazzPlaying) {
+      startJazz();
+      btn.textContent = '🔇 SILENCIAR';
+      btn.style.background = 'rgba(255,100,0,0.35)';
+    } else {
+      stopJazz();
+      btn.textContent = '🎷 MÚSICA';
+      btn.style.background = 'rgba(255,100,0,0.15)';
+    }
+  };
+  document.body.appendChild(btn);
+}
+
 // Kick off on load
 window.addEventListener('load', () => {
+  addMusicButton();
   setTimeout(startAnimation, 500);
+  // Auto-start jazz after first interaction (browser policy)
+  document.addEventListener('click', () => {
+    if (!jazzPlaying) startJazz();
+  }, { once: true });
 });
 </script>
 </body>
