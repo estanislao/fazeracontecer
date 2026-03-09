@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pessoas que Fazem Acontecer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #000;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    font-family: 'Oswald', sans-serif;
+  }
+
+  #stage {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===================== SCENE BASE ===================== */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+  }
+  .scene.active { opacity: 1; pointer-events: all; }
+
+  /* ===================== SCENE 1: ZERO ===================== */
+  #scene1 {
+    background: #000;
+  }
+
+  .desk {
+    position: relative;
+    width: 340px;
+    height: 200px;
+    margin-top: 40px;
+  }
+
+  /* Desk surface */
+  .desk-surface {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 18px;
+    background: linear-gradient(180deg, #3a2a1a 0%, #2a1a0a 100%);
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+  }
+
+  /* Laptop */
+  .laptop {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .laptop-screen {
+    width: 110px;
+    height: 70px;
+    background: linear-gradient(135deg, #1a3a5c, #0d2137);
+    border: 3px solid #444;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(50,150,255,0.3);
+  }
+  .laptop-screen::after {
+    content: '';
+    width: 70%;
+    height: 60%;
+    background: repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(100,200,255,0.05) 4px, rgba(100,200,255,0.05) 5px);
+  }
+  .laptop-base {
+    width: 120px;
+    height: 8px;
+    background: #444;
+    border-radius: 0 0 4px 4px;
+  }
+
+  /* Headset */
+  .headset {
+    position: absolute;
+    bottom: 26px;
+    right: 30px;
+    width: 38px;
+    height: 38px;
+  }
+  .headset svg { width: 100%; height: 100%; }
+
+  /* Seller character */
+  .seller {
+    position: absolute;
+    bottom: 26px;
+    left: 60px;
+    width: 60px;
+    height: 120px;
+  }
+  .seller-body {
+    width: 40px;
+    height: 60px;
+    background: linear-gradient(180deg, #2255aa 0%, #1a3d7a 100%);
+    border-radius: 8px 8px 0 0;
+    margin: 0 auto;
+    position: relative;
+  }
+  .seller-head {
+    width: 36px;
+    height: 36px;
+    background: #e8c89a;
+    border-radius: 50%;
+    margin: 0 auto 2px;
+    position: relative;
+  }
+  .seller-head::after {
+    content: '';
+    position: absolute;
+    top: 8px; left: 8px;
+    width: 20px; height: 16px;
+    background: #d4a870;
+    border-radius: 50% 50% 60% 60%;
+  }
+  /* headphone on head */
+  .seller-head::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -2px;
+    width: 40px; height: 22px;
+    border: 3px solid #333;
+    border-radius: 50% 50% 0 0;
+    border-bottom: none;
+  }
+  .seller-arm-left {
+    position: absolute;
+    top: 10px; left: -14px;
+    width: 14px; height: 40px;
+    background: #2255aa;
+    border-radius: 6px;
+    transform-origin: top center;
+    transform: rotate(-10deg);
+  }
+  .seller-arm-right {
+    position: absolute;
+    top: 10px; right: -14px;
+    width: 14px; height: 40px;
+    background: #2255aa;
+    border-radius: 6px;
+    transform-origin: top center;
+    transform: rotate(10deg);
+  }
+  .seller-legs {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    margin: 0 auto;
+    width: 40px;
+  }
+  .seller-leg {
+    width: 16px;
+    height: 40px;
+    background: #1a2a4a;
+    border-radius: 0 0 6px 6px;
+  }
+
+  /* Phone icon blinking */
+  .phone-icon {
+    font-size: 60px;
+    animation: phonePulse 1s ease-in-out infinite;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 1s;
+  }
+  .phone-icon.show { opacity: 1; }
+
+  @keyframes phonePulse {
+    0%, 100% { transform: translateX(-50%) scale(1); filter: brightness(1); }
+    50% { transform: translateX(-50%) scale(1.15); filter: brightness(1.5) drop-shadow(0 0 12px #ff6600); }
+  }
+
+  /* Typing text */
+  .typing-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(28px, 5vw, 52px);
+    color: #fff;
+    letter-spacing: 3px;
+    text-align: center;
+    margin-top: 30px;
+    min-height: 70px;
+  }
+  .typing-text span { color: #ff6600; }
+
+  /* Zoom-in desk animation */
+  @keyframes zoomOut {
+    0% { transform: scale(2); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .zoom-out { animation: zoomOut 1.2s ease-out forwards; }
+
+  /* ===================== SCENE 2: REJEIÇÕES ===================== */
+  #scene2 {
+    background: radial-gradient(ellipse at center, #0d1a2e 0%, #000 100%);
+  }
+
+  .rejection-arena {
+    position: relative;
+    width: 500px;
+    height: 340px;
+  }
+
+  .fighter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Balões de rejeição */
+  .rejection-bubble {
+    position: absolute;
+    background: linear-gradient(135deg, #cc2200, #880000);
+    border: 2px solid #ff4422;
+    border-radius: 18px;
+    padding: 10px 18px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    color: #fff;
+    white-space: nowrap;
+    opacity: 0;
+    font-weight: 700;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(200,30,0,0.5);
+  }
+  .rejection-bubble::after {
+    content: '👊';
+    position: absolute;
+    right: -28px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+  }
+
+  @keyframes flyBubble1 {
+    0% { transform: translate(200px, -80px) scale(0) rotate(-10deg); opacity: 0; }
+    20% { opacity: 1; }
+    50% { transform: translate(-30px, 40px) scale(1) rotate(-5deg); opacity: 1; }
+    80% { opacity: 0.5; }
+    100% { transform: translate(-100px, 80px) scale(0.8) rotate(-15deg); opacity: 0; }
+  }
+  @keyframes flyBubble2 {
+    0% { transform: translate(-180px, -60px) scale(0) rotate(8deg); opacity: 0; }
+    20% { opacity: 1; }
+    50% { transform: translate(20px, 50px) scale(1) rotate(3deg); opacity: 1; }
+    80% { opacity: 0.5; }
+    100% { transform: translate(80px, 90px) scale(0.8) rotate(12deg); opacity: 0; }
+  }
+  @keyframes flyBubble3 {
+    0% { transform: translate(100px, -120px) scale(0) rotate(-5deg); opacity: 0; }
+    20% { opacity: 1; }
+    50% { transform: translate(-10px, 60px) scale(1) rotate(2deg); opacity: 1; }
+    80% { opacity: 0.5; }
+    100% { transform: translate(-50px, 100px) scale(0.7) rotate(-10deg); opacity: 0; }
+  }
+
+  .bubble1 { top: 80px; left: 50px; animation: flyBubble1 2s ease-in-out forwards; }
+  .bubble2 { top: 100px; right: 40px; animation: flyBubble2 2s ease-in-out 0.7s forwards; }
+  .bubble3 { top: 60px; left: 100px; animation: flyBubble3 2s ease-in-out 1.4s forwards; }
+
+  /* Character duck and rise */
+  @keyframes duckRise {
+    0% { transform: translateX(-50%) scaleY(1); }
+    30% { transform: translateX(-50%) scaleY(0.6) translateY(20px); }
+    60% { transform: translateX(-50%) scaleY(1.1) translateY(-5px); }
+    100% { transform: translateX(-50%) scaleY(1); }
+  }
+  .duck-animation { animation: duckRise 3s ease-in-out infinite; }
+
+  /* Belt tighten */
+  .belt {
+    position: absolute;
+    bottom: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    opacity: 0;
+    transition: opacity 0.5s;
+  }
+  .belt.show { opacity: 1; animation: beltPop 0.5s ease-out; }
+  @keyframes beltPop {
+    0% { transform: translateX(-50%) scale(0); }
+    60% { transform: translateX(-50%) scale(1.3); }
+    100% { transform: translateX(-50%) scale(1); }
+  }
+
+  /* ===================== SCENE 3: VIRADA ===================== */
+  #scene3 {
+    background: radial-gradient(ellipse at 30% 50%, #0a1f0a 0%, #000 100%);
+  }
+
+  .win-sequence {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 20px;
+  }
+
+  .win-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 14px 28px;
+    width: 420px;
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+  .win-item.revealed {
+    opacity: 1;
+    transform: translateX(0);
+    border-color: rgba(0,255,100,0.3);
+    background: rgba(0,255,100,0.05);
+  }
+  .win-icon { font-size: 28px; }
+  .win-text { flex: 1; }
+  .win-check { font-size: 22px; opacity: 0; transition: opacity 0.3s 0.3s; }
+  .win-item.revealed .win-check { opacity: 1; }
+
+  /* Explosion */
+  .explosion {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .explosion.boom {
+    opacity: 1;
+    animation: explode 1.5s ease-out forwards;
+  }
+  @keyframes explode {
+    0% { opacity: 0; transform: scale(0.5); }
+    20% { opacity: 1; transform: scale(1.2); }
+    50% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1); }
+  }
+  .trophy-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(50px, 10vw, 100px);
+    color: #ffd700;
+    text-shadow: 0 0 40px #ff9900, 0 0 80px #ff6600;
+    text-align: center;
+    line-height: 1;
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    top: -20px;
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===================== SCENE 4: CLÍMAX ===================== */
+  #scene4 {
+    background: linear-gradient(135deg, #000510 0%, #020d1f 50%, #000510 100%);
+  }
+
+  .team-formation {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 30px;
+  }
+
+  .team-member {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .team-member.pop {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .team-member.center-hero { transform: translateY(0) scale(1.2); }
+  .team-member.center-hero.pop { transform: translateY(-10px) scale(1.25); }
+
+  .mini-head {
+    width: 32px; height: 32px;
+    background: #e8c89a;
+    border-radius: 50%;
+    margin-bottom: 2px;
+    position: relative;
+  }
+  .mini-head::after {
+    content: '';
+    position: absolute;
+    top: 8px; left: 6px;
+    width: 20px; height: 14px;
+    background: #d4a870;
+    border-radius: 50%;
+  }
+  .mini-body {
+    width: 28px; height: 44px;
+    border-radius: 6px 6px 0 0;
+    margin-bottom: 2px;
+  }
+  .mini-legs {
+    width: 28px; height: 24px;
+    background: #1a2a4a;
+    border-radius: 0 0 6px 6px;
+  }
+  .raised-arm {
+    font-size: 18px;
+    animation: armWave 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes armWave {
+    0% { transform: rotate(-20deg); }
+    100% { transform: rotate(20deg); }
+  }
+
+  .impact-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(36px, 6vw, 72px);
+    color: #fff;
+    letter-spacing: 6px;
+    text-align: center;
+    text-shadow: 0 0 30px rgba(255,150,0,0.5);
+    overflow: hidden;
+  }
+  .impact-text span {
+    display: inline-block;
+    opacity: 0;
+    transform: scale(2) rotateX(90deg);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .impact-text span.shown {
+    opacity: 1;
+    transform: scale(1) rotateX(0deg);
+  }
+  .impact-text .orange { color: #ff6600; }
+
+  /* ===================== SCENE 5: FINAL ===================== */
+  #scene5 {
+    background: #000;
+  }
+
+  .chart-container {
+    width: 500px;
+    height: 220px;
+    position: relative;
+    margin-bottom: 30px;
+  }
+  .chart-axis-x {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: rgba(255,255,255,0.2);
+  }
+  .chart-axis-y {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: 2px;
+    background: rgba(255,255,255,0.2);
+  }
+  .chart-line {
+    position: absolute;
+    bottom: 2px; left: 2px;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #00cc44, #00ff88);
+    transform-origin: left bottom;
+    transition: none;
+    box-shadow: 0 0 10px #00ff88;
+  }
+  .chart-glow {
+    position: absolute;
+    bottom: 4px; left: 2px;
+    width: 0;
+    height: 80px;
+    background: linear-gradient(0deg, rgba(0,255,100,0.15), transparent);
+    transition: none;
+  }
+
+  .logo-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transition: opacity 1s;
+  }
+  .logo-area.show { opacity: 1; }
+
+  .logo-box {
+    background: linear-gradient(135deg, #ff6600, #cc3300);
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 32px;
+    color: #fff;
+    letter-spacing: 4px;
+    box-shadow: 0 0 30px rgba(255,100,0,0.4);
+  }
+
+  .cta-text {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    color: #aaa;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .cta-text strong {
+    color: #ff6600;
+    font-size: 26px;
+  }
+
+  /* Final overlay */
+  .final-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    transition: opacity 1s;
+  }
+  .final-overlay.show { opacity: 1; }
+  .final-big-text {
+    font-family: 'Bebas Neue', cursive;
+    font-size: clamp(40px, 7vw, 88px);
+    color: #fff;
+    letter-spacing: 8px;
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 0 0 60px rgba(255,100,0,0.6);
+  }
+  .final-big-text .orange { color: #ff6600; }
+  .final-logo-small {
+    margin-top: 20px;
+    font-family: 'Bebas Neue', cursive;
+    font-size: 20px;
+    color: #555;
+    letter-spacing: 5px;
+  }
+
+  /* Progress bar */
+  #progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff6600, #ff0066);
+    width: 0%;
+    transition: width 0.5s linear;
+    z-index: 999;
+    box-shadow: 0 0 8px #ff6600;
+  }
+
+  /* Subtitle captions */
+  #caption {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Roboto Mono', monospace;
+    font-size: clamp(13px, 2vw, 17px);
+    color: rgba(255,255,255,0.75);
+    text-align: center;
+    max-width: 80%;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 20px;
+    border-radius: 6px;
+    border-left: 3px solid #ff6600;
+    z-index: 50;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  #caption.show { opacity: 1; }
+
+  /* Scanline effect */
+  #scanlines {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  /* Flicker on transitions */
+  @keyframes screenFlicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+    75% { opacity: 0.95; }
+  }
+  .flicker { animation: screenFlicker 0.15s steps(1) 3; }
+
+  /* Replay button */
+  #replay-btn {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    background: rgba(255,100,0,0.15);
+    border: 2px solid #ff6600;
+    color: #ff6600;
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    letter-spacing: 2px;
+    padding: 10px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+  }
+  #replay-btn:hover { background: rgba(255,100,0,0.3); transform: scale(1.05); }
+  #replay-btn.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="scanlines"></div>
+<div id="progress-bar"></div>
+<div id="caption"></div>
+
+<div id="stage">
+
+  <!-- SCENE 1: ZERO -->
+  <div class="scene" id="scene1">
+    <div class="phone-icon" id="phone-icon">📞</div>
+    <div class="desk zoom-out">
+      <div class="seller">
+        <div class="seller-head"></div>
+        <div class="seller-body">
+          <div class="seller-arm-left"></div>
+          <div class="seller-arm-right"></div>
+        </div>
+        <div class="seller-legs">
+          <div class="seller-leg"></div>
+          <div class="seller-leg"></div>
+        </div>
+      </div>
+      <div class="laptop">
+        <div class="laptop-screen"></div>
+        <div class="laptop-base"></div>
+      </div>
+      <div class="headset">
+        <svg viewBox="0 0 40 40" fill="none">
+          <path d="M8 20 C8 12 14 6 20 6 C26 6 32 12 32 20" stroke="#888" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <rect x="5" y="18" width="8" height="12" rx="4" fill="#555"/>
+          <rect x="27" y="18" width="8" height="12" rx="4" fill="#555"/>
+        </svg>
+      </div>
+      <div class="desk-surface"></div>
+    </div>
+    <div class="typing-text" id="typing-text1"></div>
+  </div>
+
+  <!-- SCENE 2: REJEIÇÕES -->
+  <div class="scene" id="scene2">
+    <div class="rejection-arena">
+      <div class="rejection-bubble bubble1">NÃO AGORA.</div>
+      <div class="rejection-bubble bubble2">JÁ TENHO FORNECEDOR!</div>
+      <div class="rejection-bubble bubble3">SEM INTERESSE.</div>
+
+      <div class="fighter duck-animation" id="fighter">
+        <div class="seller-head"></div>
+        <div class="seller-body" style="background:linear-gradient(180deg,#cc4400,#8b2a00);">
+          <div class="seller-arm-left" style="background:#cc4400;"></div>
+          <div class="seller-arm-right" style="background:#cc4400;"></div>
+        </div>
+        <div class="seller-legs">
+          <div class="seller-leg"></div>
+          <div class="seller-leg"></div>
+        </div>
+      </div>
+      <div class="belt" id="belt">🥊</div>
+    </div>
+    <div class="typing-text" id="typing-text2"></div>
+  </div>
+
+  <!-- SCENE 3: VIRADA -->
+  <div class="scene" id="scene3">
+    <div class="win-sequence">
+      <div class="win-item" id="win1">
+        <span class="win-icon">📞</span>
+        <span class="win-text">Lead qualificado responde!</span>
+        <span class="win-check">✅</span>
+      </div>
+      <div class="win-item" id="win2">
+        <span class="win-icon">📅</span>
+        <span class="win-text">Reunião agendada</span>
+        <span class="win-check">✅</span>
+      </div>
+      <div class="win-item" id="win3">
+        <span class="win-icon">📊</span>
+        <span class="win-text">Proposta apresentada</span>
+        <span class="win-check">✅</span>
+      </div>
+      <div class="win-item" id="win4">
+        <span class="win-icon">🤝</span>
+        <span class="win-text">Negociação em andamento... 💰💰💰</span>
+        <span class="win-check">✅</span>
+      </div>
+      <div class="win-item" id="win5" style="border-color:rgba(255,200,0,0.5);background:rgba(255,180,0,0.08);">
+        <span class="win-icon">🏆</span>
+        <span class="win-text" style="color:#ffd700;font-weight:700;font-size:22px;">CONTRATO ASSINADO!</span>
+        <span class="win-check">⭐</span>
+      </div>
+    </div>
+    <div class="explosion" id="explosion">
+      <div class="trophy-text">🏆 FECHOU! 🏆</div>
+    </div>
+  </div>
+
+  <!-- SCENE 4: CLÍMAX / TIME -->
+  <div class="scene" id="scene4">
+    <div class="team-formation" id="team">
+      <!-- built by JS -->
+    </div>
+    <div class="impact-text" id="impact-text">
+      <span>P</span><span>E</span><span>S</span><span>S</span><span>O</span><span>A</span><span>S</span>
+      <span>&nbsp;</span>
+      <span class="orange">Q</span><span class="orange">U</span><span class="orange">E</span>
+      <span>&nbsp;</span>
+      <span>F</span><span>A</span><span>Z</span><span>E</span><span>M</span>
+      <br>
+      <span class="orange">A</span><span class="orange">C</span><span class="orange">O</span><span class="orange">N</span><span class="orange">T</span><span class="orange">E</span><span class="orange">C</span><span class="orange">E</span><span class="orange">R</span><span class="orange">.</span>
+    </div>
+  </div>
+
+  <!-- SCENE 5: GRÁFICO + LOGO -->
+  <div class="scene" id="scene5">
+    <div class="chart-container">
+      <div class="chart-axis-x"></div>
+      <div class="chart-axis-y"></div>
+      <div class="chart-glow" id="chart-glow"></div>
+      <div class="chart-line" id="chart-line"></div>
+    </div>
+    <div class="logo-area" id="logo-area">
+      <div class="logo-box">SUA EMPRESA</div>
+      <div class="cta-text">Hoje é dia de fazer acontecer.<br><strong>Bora ligar? Bora vender!</strong></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Final overlay -->
+<div class="final-overlay" id="final-overlay">
+  <div class="final-big-text">
+    PESSOAS QUE<br>
+    <span class="orange">FAZEM ACONTECER.</span>
+  </div>
+  <div class="final-logo-small">SUA EMPRESA • 2025</div>
+</div>
+
+<button id="replay-btn" onclick="startAnimation()">↻ REPETIR</button>
+
+<script>
+// ============================================================
+// UTILS
+// ============================================================
+function el(id) { return document.getElementById(id); }
+
+function showScene(id) {
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  el(id).classList.add('active');
+  el('stage').classList.add('flicker');
+  setTimeout(() => el('stage').classList.remove('flicker'), 200);
+}
+
+function typeText(elId, text, speed = 60, color = false) {
+  return new Promise(resolve => {
+    const elem = el(elId);
+    elem.innerHTML = '';
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        elem.innerHTML += text[i];
+        i++;
+      } else {
+        clearInterval(interval);
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+function caption(text, duration = 4000) {
+  const cap = el('caption');
+  cap.textContent = text;
+  cap.classList.add('show');
+  clearTimeout(cap._timeout);
+  cap._timeout = setTimeout(() => cap.classList.remove('show'), duration);
+}
+
+function updateProgress(pct) {
+  el('progress-bar').style.width = pct + '%';
+}
+
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti() {
+  const colors = ['#ff6600','#ffd700','#00ff88','#ff0066','#00ccff','#fff'];
+  for (let i = 0; i < 80; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    piece.style.animationDelay = (Math.random() * 0.5) + 's';
+    piece.style.width = piece.style.height = (6 + Math.random() * 8) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// ============================================================
+// CHART ANIMATION
+// ============================================================
+function animateChart() {
+  const line = el('chart-line');
+  const glow = el('chart-glow');
+  const W = 496, H = 218;
+
+  // SVG path: exponential growth curve
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.style.position = 'absolute';
+  svg.style.bottom = '2px';
+  svg.style.left = '2px';
+
+  const points = [];
+  for (let i = 0; i <= 40; i++) {
+    const x = (i / 40) * W;
+    const t = i / 40;
+    const y = H - (Math.pow(t, 1.8) * H * 0.92 + 5);
+    points.push(`${x},${y}`);
+  }
+  const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  polyline.setAttribute('points', points.join(' '));
+  polyline.setAttribute('fill', 'none');
+  polyline.setAttribute('stroke', 'url(#g)');
+  polyline.setAttribute('stroke-width', '3');
+  polyline.setAttribute('stroke-linecap', 'round');
+  polyline.setAttribute('stroke-linejoin', 'round');
+
+  const length = polyline.getTotalLength ? (() => {
+    svg.appendChild(polyline);
+    return polyline.getTotalLength();
+  })() : 700;
+
+  polyline.style.strokeDasharray = length;
+  polyline.style.strokeDashoffset = length;
+  polyline.style.transition = 'stroke-dashoffset 2.5s cubic-bezier(0.25, 0, 0.1, 1)';
+
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs.innerHTML = `<linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#00cc44"/><stop offset="100%" stop-color="#00ff88"/></linearGradient>`;
+  svg.appendChild(defs);
+  if (!polyline.parentNode) svg.appendChild(polyline);
+
+  // Area fill
+  const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  const areaPoints = `0,${H} ` + points.join(' ') + ` ${W},${H}`;
+  polygon.setAttribute('points', areaPoints);
+  polygon.setAttribute('fill', 'url(#ag)');
+  polygon.style.opacity = '0';
+  polygon.style.transition = 'opacity 1s 1s';
+  const defs2 = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  defs2.innerHTML = `<linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(0,255,100,0.2)"/><stop offset="100%" stop-color="rgba(0,255,100,0)"/></linearGradient>`;
+  svg.insertBefore(defs2, svg.firstChild);
+  svg.insertBefore(polygon, polyline);
+
+  el('chart-container').appendChild(svg);
+
+  // Remove old elements
+  line.style.display = 'none';
+  glow.style.display = 'none';
+
+  setTimeout(() => {
+    polyline.style.strokeDashoffset = 0;
+    setTimeout(() => { polygon.style.opacity = '1'; }, 500);
+  }, 100);
+}
+
+// ============================================================
+// TEAM BUILDER
+// ============================================================
+function buildTeam() {
+  const container = el('team');
+  container.innerHTML = '';
+  const colors = ['#2255aa','#3366cc','#cc4400','#2255aa','#228833','#cc4400','#3366cc'];
+  const isCenter = [false,false,false,true,false,false,false];
+
+  for (let i = 0; i < 7; i++) {
+    const m = document.createElement('div');
+    m.className = 'team-member' + (isCenter[i] ? ' center-hero' : '');
+    m.id = 'tm' + i;
+    m.innerHTML = `
+      <div class="raised-arm" style="animation-delay:${i*0.1}s">🙌</div>
+      <div class="mini-head"></div>
+      <div class="mini-body" style="background:${colors[i]}"></div>
+      <div class="mini-legs"></div>
+    `;
+    container.appendChild(m);
+  }
+}
+
+// ============================================================
+// MAIN ANIMATION TIMELINE
+// ============================================================
+async function startAnimation() {
+  // Reset
+  document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+  el('final-overlay').classList.remove('show');
+  el('replay-btn').classList.remove('show');
+  el('caption').classList.remove('show');
+  el('progress-bar').style.width = '0%';
+  el('logo-area').classList.remove('show');
+  el('typing-text1').innerHTML = '';
+  el('typing-text2').innerHTML = '';
+  el('explosion').classList.remove('boom');
+  el('phone-icon').classList.remove('show');
+  el('belt').classList.remove('show');
+  el('impact-text').querySelectorAll('span').forEach(s => s.classList.remove('shown'));
+  document.querySelectorAll('.win-item').forEach(w => w.classList.remove('revealed'));
+
+  // ── SCENE 1: 0–5s ──────────────────────────────────────────
+  showScene('scene1');
+  updateProgress(0);
+
+  await wait(600);
+  el('phone-icon').classList.add('show');
+  caption('Uma ligação. Um "não". Outro "não". Mais um "não"...');
+
+  await wait(1200);
+  await typeText('typing-text1', 'Tudo começa do ZERO...', 55);
+  updateProgress(8);
+  await wait(2000);
+  updateProgress(16);
+
+  // ── SCENE 2: 5–15s ─────────────────────────────────────────
+  showScene('scene2');
+  caption('Cold call após cold call. Prospecção sem parar. É aí que o jogo vira...');
+  updateProgress(20);
+
+  await wait(600);
+
+  // Reset bubble animations by re-inserting them
+  const arena = document.querySelector('.rejection-arena');
+  ['bubble1','bubble2','bubble3'].forEach(cls => {
+    const b = arena.querySelector('.'+cls);
+    b.style.animation = 'none';
+    void b.offsetHeight;
+    b.style.animation = '';
+  });
+
+  await wait(3500);
+  el('belt').classList.add('show');
+  updateProgress(35);
+
+  await typeText('typing-text2', 'Mas quem desiste?', 70);
+  updateProgress(42);
+  await wait(3000);
+  updateProgress(50);
+
+  // ── SCENE 3: 15–30s ────────────────────────────────────────
+  showScene('scene3');
+  caption('Uma conversa vira reunião. Uma reunião vira proposta. Uma proposta vira CONTRATO!');
+  updateProgress(52);
+
+  const wins = ['win1','win2','win3','win4','win5'];
+  for (let i = 0; i < wins.length; i++) {
+    await wait(i === 4 ? 800 : 1800);
+    el(wins[i]).classList.add('revealed');
+    updateProgress(52 + (i+1) * 5);
+  }
+
+  await wait(600);
+  launchConfetti();
+  el('explosion').classList.add('boom');
+  updateProgress(75);
+  await wait(2000);
+
+  // ── SCENE 4: 30–45s ────────────────────────────────────────
+  showScene('scene4');
+  buildTeam();
+  updateProgress(76);
+  caption('Não é o CRM. Não é a ferramenta. São vocês. As pessoas que fazem acontecer.');
+
+  // Pop team members one by one
+  for (let i = 0; i < 7; i++) {
+    await wait(180);
+    el('tm'+i).classList.add('pop');
+  }
+
+  updateProgress(80);
+  await wait(600);
+
+  // Impact text letter by letter
+  const letters = el('impact-text').querySelectorAll('span');
+  for (let i = 0; i < letters.length; i++) {
+    letters[i].classList.add('shown');
+    await wait(80);
+  }
+
+  updateProgress(90);
+  await wait(3500);
+
+  // ── SCENE 5: 45–60s ────────────────────────────────────────
+  showScene('scene5');
+  updateProgress(92);
+  caption('Hoje é dia de fazer acontecer. Bora ligar? Bora vender!');
+
+  animateChart();
+  await wait(2800);
+
+  el('logo-area').classList.add('show');
+  updateProgress(96);
+  await wait(3000);
+
+  // ── FINAL ──────────────────────────────────────────────────
+  el('final-overlay').classList.add('show');
+  launchConfetti();
+  updateProgress(100);
+
+  await wait(500);
+  el('replay-btn').classList.add('show');
+}
+
+// Kick off on load
+window.addEventListener('load', () => {
+  setTimeout(startAnimation, 500);
+});
+</script>
+</body>
+</html>
